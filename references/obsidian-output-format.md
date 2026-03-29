@@ -40,13 +40,13 @@ item_count: 42
 ## 2026-03-28
 
 ### [21:14](https://m.okjike.com/originalPosts/unique-post-id)
-> 话题：AI探索站
-
 正文内容
 
 ![](assets/jike/2026-03/unique-post-id-01.jpg)
 
 ![](assets/jike/2026-03/unique-post-id-02.jpg)
+
+#AI探索站
 
 ---
 ```
@@ -71,7 +71,7 @@ item_count: 42
 - Keep blank lines between sections for clean Markdown.
 - If `content` is empty, render `(no text content)`.
 - If `source_url` exists, attach it to the time heading as a Markdown link.
-- If `topic` exists, render it as a lightweight `> 话题：...` line.
+- If `topic` exists, render it near the bottom as a simple tag like `#AI探索站`.
 - Prefer rendering downloaded local image assets as `![](assets/...)` so Obsidian previews them inline.
 - Do not render a separate metadata block for source, id, or image links.
 - Keep non-image media as normal Markdown links when needed, preferring local files when available.

@@ -107,7 +107,7 @@ The live adapter now prefers the authenticated `personalUpdate/single` API expos
 - Back up media to local files under `assets/jike/` by default for long-term preservation.
 - Prefer rendering local media files in Markdown so Obsidian can preview them inline even if remote links expire.
 - Keep source links lightweight by attaching them to the time heading instead of rendering a separate metadata block.
-- Render topic information for each item with a lightweight `话题` line.
+- Render the topic for each item as a lightweight bottom tag, close to the Jike post layout.
 - Preserve video references as Markdown links when video items appear.
 - Group entries by day inside each month file.
 - Include a short monthly summary in simplified Chinese.

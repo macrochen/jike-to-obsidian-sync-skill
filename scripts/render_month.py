@@ -50,7 +50,7 @@ def render_topic(topic: str) -> str:
     normalized = (topic or "").strip()
     if not normalized:
         return ""
-    return f"> 话题：{normalized}"
+    return f"#{normalized}"
 
 
 def media_render_targets(item: dict) -> list[dict]:
@@ -98,10 +98,6 @@ def render_markdown(month: str, items: list[dict], generated_at: str) -> str:
             dt = datetime.fromisoformat(item["created_at"])
             content = item.get("content", "").strip() or "(no text content)"
             lines.append(format_time_heading(dt, item.get("source_url", "")))
-            topic_line = render_topic(item.get("topic", ""))
-            if topic_line:
-                lines.append(topic_line)
-                lines.append("")
             lines.append(content)
             lines.append("")
             for media in media_render_targets(item):
@@ -114,6 +110,10 @@ def render_markdown(month: str, items: list[dict], generated_at: str) -> str:
                 else:
                     lines.append(f"> [视频]({target})")
                     lines.append("")
+            topic_line = render_topic(item.get("topic", ""))
+            if topic_line:
+                lines.append(topic_line)
+                lines.append("")
             lines.append("---")
             lines.append("")
 
