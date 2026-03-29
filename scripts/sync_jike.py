@@ -9,6 +9,9 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 from render_month import render_markdown
 from render_index import render_index_markdown
@@ -118,6 +121,7 @@ def normalize_item(item: dict) -> dict:
         "content": str(item.get("content") or item.get("text") or "").strip(),
         "source_url": item.get("source_url") or item.get("url") or "",
         "media_links": normalize_media_links(item.get("media_links") or item.get("media") or []),
+        "media_assets": normalize_media_assets(item.get("media_assets") or []),
         "topic": str(item.get("topic") or "").strip(),
         "raw_type": str(item.get("raw_type") or item.get("type") or "note").strip(),
     }
@@ -143,6 +147,26 @@ def normalize_media_links(value: list | tuple) -> list[str]:
     return links
 
 
+def normalize_media_assets(value: list | tuple) -> list[dict]:
+    assets: list[dict] = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+        source_url = str(entry.get("source_url") or "").strip()
+        local_path = str(entry.get("local_path") or "").strip()
+        kind = str(entry.get("kind") or "").strip()
+        if not source_url or not local_path:
+            continue
+        assets.append(
+            {
+                "source_url": source_url,
+                "local_path": local_path,
+                "kind": kind or infer_media_kind(source_url),
+            }
+        )
+    return assets
+
+
 def canonical_signature(item: dict) -> str:
     content = " ".join((item.get("content") or "").split())
     source_url = (item.get("source_url") or "").strip()
@@ -163,19 +187,32 @@ def choose_better_item(current: dict, candidate: dict) -> dict:
         return candidate
     current_score = item_quality_score(current)
     candidate_score = item_quality_score(candidate)
+    chosen = candidate
     if candidate_score > current_score:
-        return candidate
-    if candidate_score < current_score:
-        return current
+        chosen = candidate
+    elif candidate_score < current_score:
+        chosen = current
 
-    return candidate
+    return merge_item_records(current, candidate, chosen)
 
 
-def item_quality_score(item: dict) -> tuple[int, int, int]:
+def merge_item_records(current: dict, candidate: dict, chosen: dict) -> dict:
+    merged = dict(chosen)
+    merged["media_links"] = candidate.get("media_links") or current.get("media_links") or []
+    merged["media_assets"] = candidate.get("media_assets") or current.get("media_assets") or []
+    if not merged.get("topic"):
+        merged["topic"] = candidate.get("topic") or current.get("topic") or ""
+    if not merged.get("source_url"):
+        merged["source_url"] = candidate.get("source_url") or current.get("source_url") or ""
+    return merged
+
+
+def item_quality_score(item: dict) -> tuple[int, int, int, int]:
     source_url_score = 1 if item.get("source_url") else 0
     content_length = len((item.get("content") or "").strip())
     topic_score = 1 if item.get("topic") else 0
-    return (source_url_score, content_length, topic_score)
+    asset_score = len(item.get("media_assets") or [])
+    return (source_url_score, asset_score, content_length, topic_score)
 
 
 def should_merge_items(current: dict, candidate: dict) -> bool:
@@ -259,6 +296,104 @@ def update_state(
     return state
 
 
+def infer_media_kind(url: str) -> str:
+    lowered = url.lower()
+    if any(token in lowered for token in [".mp4", ".mov", ".m4v", ".webm", "video"]):
+        return "视频"
+    return "图片"
+
+
+def infer_media_extension(url: str, kind: str) -> str:
+    suffix = Path(urlparse(url).path).suffix.lower()
+    if suffix:
+        return suffix
+    return ".mp4" if kind == "视频" else ".jpg"
+
+
+def asset_relative_path(item: dict, index: int, media_url: str) -> Path:
+    month = item["created_at"][:7]
+    kind = infer_media_kind(media_url)
+    extension = infer_media_extension(media_url, kind)
+    return Path("assets") / "jike" / month / f"{item['id']}-{index + 1:02d}{extension}"
+
+
+def download_media_asset(media_url: str, destination: Path) -> bool:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists() and destination.stat().st_size > 0:
+        return True
+
+    request = Request(
+        media_url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/145.0 Safari/537.36"
+        },
+    )
+    try:
+        with urlopen(request, timeout=5) as response:
+            data = response.read()
+    except (OSError, URLError) as exc:
+        print(f"Failed to download media asset: {media_url} ({exc})")
+        return False
+
+    if not data:
+        return False
+
+    destination.write_bytes(data)
+    return True
+
+
+def localize_media_assets(output_root: Path, items_by_id: dict[str, dict]) -> set[str]:
+    touched_months: set[str] = set()
+    for item_id, item in list(items_by_id.items()):
+        media_links = item.get("media_links") or []
+        if not media_links:
+            continue
+
+        existing_assets = {asset.get("source_url"): asset for asset in item.get("media_assets") or []}
+        localized_assets: list[dict] = []
+        changed = False
+
+        for index, media_url in enumerate(media_links):
+            media_kind = infer_media_kind(media_url)
+            relative_path = asset_relative_path(item, index, media_url)
+            absolute_path = output_root / relative_path
+            asset = existing_assets.get(media_url)
+            local_path = str(relative_path).replace("\\", "/")
+
+            if asset and asset.get("local_path") and (output_root / asset["local_path"]).exists():
+                localized_assets.append(
+                    {
+                        "source_url": media_url,
+                        "local_path": asset["local_path"],
+                        "kind": asset.get("kind") or media_kind,
+                    }
+                )
+                continue
+
+            if download_media_asset(media_url, absolute_path):
+                localized_assets.append(
+                    {
+                        "source_url": media_url,
+                        "local_path": local_path,
+                        "kind": media_kind,
+                    }
+                )
+                changed = True
+            elif asset:
+                localized_assets.append(asset)
+
+        if localized_assets != (item.get("media_assets") or []):
+            updated_item = dict(item)
+            updated_item["media_assets"] = localized_assets
+            items_by_id[item_id] = updated_item
+            touched_months.add(item["created_at"][:7])
+        elif changed:
+            touched_months.add(item["created_at"][:7])
+
+    return touched_months
+
+
 def render_changed_months(state_dir: Path, output_root: Path, months: set[str], items_by_id: dict[str, dict]) -> None:
     generated_at = now_iso()
     for month in sorted(months):
@@ -305,6 +440,8 @@ def main() -> int:
             existing_by_signature[signature] = item["id"]
             touched_months.add(item["created_at"][:7])
             changed_ids.append(item["id"])
+
+    touched_months.update(localize_media_assets(output_root, items_by_id))
 
     save_items(items_path, items_by_id)
     state = load_state(state_path)

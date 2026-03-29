@@ -7,8 +7,6 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse
-
 from summarize_month import summarize_items
 
 
@@ -48,6 +46,27 @@ def detect_media_kind(url: str) -> str:
     return "图片"
 
 
+def render_topic(topic: str) -> str:
+    normalized = (topic or "").strip()
+    if not normalized:
+        return ""
+    return f"> 话题：{normalized}"
+
+
+def media_render_targets(item: dict) -> list[dict]:
+    assets = item.get("media_assets") or []
+    if assets:
+        return assets
+    return [
+        {
+            "source_url": media_link,
+            "local_path": "",
+            "kind": detect_media_kind(media_link),
+        }
+        for media_link in (item.get("media_links") or [])
+    ]
+
+
 def render_markdown(month: str, items: list[dict], generated_at: str) -> str:
     lines: list[str] = [
         "---",
@@ -79,13 +98,21 @@ def render_markdown(month: str, items: list[dict], generated_at: str) -> str:
             dt = datetime.fromisoformat(item["created_at"])
             content = item.get("content", "").strip() or "(no text content)"
             lines.append(format_time_heading(dt, item.get("source_url", "")))
+            topic_line = render_topic(item.get("topic", ""))
+            if topic_line:
+                lines.append(topic_line)
+                lines.append("")
             lines.append(content)
             lines.append("")
-            media_links = item.get("media_links") or []
-            lines.append("")
-            for media_link in media_links:
-                if detect_media_kind(media_link) == "图片":
-                    lines.append(f"![]({media_link})")
+            for media in media_render_targets(item):
+                target = media.get("local_path") or media.get("source_url") or ""
+                if not target:
+                    continue
+                if media.get("kind") == "图片":
+                    lines.append(f"![]({target})")
+                    lines.append("")
+                else:
+                    lines.append(f"> [视频]({target})")
                     lines.append("")
             lines.append("---")
             lines.append("")

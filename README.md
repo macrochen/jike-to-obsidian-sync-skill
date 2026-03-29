@@ -7,7 +7,9 @@
 - 使用即刻网页端登录态进行抓取
 - 优先复用即刻网页自己的接口，获取稳定帖子 ID 和绝对时间
 - 按 `YYYY-MM.md` 归档到 Obsidian
-- 图片直接用 Markdown 图片语法内嵌显示
+- 默认将图片和视频备份到本地 `assets/jike/` 目录
+- Markdown 优先引用本地媒体文件，确保长期可回看
+- 每条动态都会保留话题信息
 - 时间标题直接链接到即刻原文
 - 支持增量同步和历史回填
 - 自动生成简体中文月度总结
@@ -53,6 +55,7 @@ JKE_OUTPUT_ROOT="/path/to/your/Obsidian-vault" \
 
 - `YYYY-MM.md`：每月归档文件
 - `即刻归档索引.md`：Obsidian 索引页
+- `assets/jike/YYYY-MM/`：本地媒体备份
 - `.jike-sync/state.json`：同步状态
 - `.jike-sync/items.jsonl`：规范化后的本地数据
 - `.jike-sync/browser-profile/`：持久登录态

@@ -97,15 +97,18 @@ The live adapter now prefers the authenticated `personalUpdate/single` API expos
 - `<output-root>/.jike-sync/state.json`: sync cursor and metadata
 - `<output-root>/.jike-sync/items.jsonl`: normalized item store
 - `<output-root>/.jike-sync/browser-profile/`: persistent browser login state for the live web adapter
+- `<output-root>/assets/jike/YYYY-MM/`: downloaded local media backups
 - `<output-root>/YYYY-MM.md`: monthly Obsidian archive
 - `<output-root>/即刻归档索引.md`: Obsidian-friendly archive index page
 
 ## Output Rules
 
 - Keep text content.
-- Render image links directly as Markdown images so Obsidian can preview them inline.
+- Back up media to local files under `assets/jike/` by default for long-term preservation.
+- Prefer rendering local media files in Markdown so Obsidian can preview them inline even if remote links expire.
 - Keep source links lightweight by attaching them to the time heading instead of rendering a separate metadata block.
-- Preserve video references as plain links when video items appear.
+- Render topic information for each item with a lightweight `话题` line.
+- Preserve video references as Markdown links when video items appear.
 - Group entries by day inside each month file.
 - Include a short monthly summary in simplified Chinese.
 - Generate a vault-level index page with wikilinks to every archived month.
