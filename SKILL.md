@@ -42,7 +42,7 @@ Override defaults when needed:
 
 ```bash
 JKE_START_URL="https://web.okjike.com/u/your-profile" \
-JKE_OUTPUT_ROOT="/path/to/Obsidian/Jike" \
+JKE_OUTPUT_ROOT="${HOME}/Obsidian-Knowledge-Base/Jike" \
 ./scripts/sync-now.sh
 ```
 
@@ -52,24 +52,24 @@ Create or update archives from JSON input:
 ./.venv/bin/python scripts/sync_jike.py \
   --source json \
   --input-json /path/to/jike-items.json \
-  --output-root /path/to/Obsidian/Jike
+  --output-root ~/Obsidian-Knowledge-Base/Jike
 ```
 
 Re-render a single month from the local sync store:
 
 ```bash
 ./.venv/bin/python scripts/render_month.py \
-  --state-dir /path/to/Obsidian/Jike/.jike-sync \
+  --state-dir ~/Obsidian-Knowledge-Base/Jike/.jike-sync \
   --month 2026-03 \
-  --output /path/to/Obsidian/Jike/2026-03.md
+  --output ~/Obsidian-Knowledge-Base/Jike/2026-03.md
 ```
 
 Re-render the archive index page:
 
 ```bash
 ./.venv/bin/python scripts/render_index.py \
-  --state-dir /path/to/Obsidian/Jike/.jike-sync \
-  --output /path/to/Obsidian/Jike/即刻归档索引.md
+  --state-dir ~/Obsidian-Knowledge-Base/Jike/.jike-sync \
+  --output ~/Obsidian-Knowledge-Base/Jike/即刻归档索引.md
 ```
 
 Generate a summary from normalized month data:
@@ -85,7 +85,7 @@ Run a live sync from Jike Web:
 ./.venv/bin/python scripts/sync_jike.py \
   --source jike-web \
   --start-url https://web.okjike.com/u/your-profile \
-  --output-root /path/to/Obsidian/Jike
+  --output-root ~/Obsidian-Knowledge-Base/Jike
 ```
 
 On the first run, log in to Jike in the opened browser and use your own profile or note stream URL as `--start-url` when possible. The browser profile is saved under `.jike-sync/browser-profile`.

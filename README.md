@@ -47,7 +47,7 @@ source .venv/bin/activate
 
 ```bash
 JKE_START_URL="https://web.okjike.com/u/your-profile" \
-JKE_OUTPUT_ROOT="/path/to/your/Obsidian-vault" \
+JKE_OUTPUT_ROOT="~/Obsidian-Knowledge-Base/Jike" \
 ./scripts/sync-now.sh
 ```
 
