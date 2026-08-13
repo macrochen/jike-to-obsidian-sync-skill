@@ -340,7 +340,12 @@ async def wait_for_login(page) -> None:
         print("Jike feed was not detected yet. Please log in and navigate to your own profile or notes page.")
         print(f"Page title: {title}")
         print(body_text)
-        await page.wait_for_timeout(5000)
+        print("Waiting up to 5 minutes for login...")
+        try:
+            await page.wait_for_selector(",".join(selectors), timeout=300_000)
+            print("Login detected, continuing...")
+        except PlaywrightTimeoutError:
+            print("Login timeout after 5 minutes.")
 
 
 def normalize_api_item(item: dict) -> dict | None:

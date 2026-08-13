@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 DEFAULT_START_URL="https://web.okjike.com/u/548BF245-5632-4652-B4AA-B87307BEC0FA"
-DEFAULT_OUTPUT_ROOT="${HOME}/Obsidian-Knowledge-Base"
+DEFAULT_OUTPUT_ROOT="${HOME}/Obsidian-Knowledge-Base/即刻随笔"
 
 START_URL="${JKE_START_URL:-$DEFAULT_START_URL}"
 OUTPUT_ROOT="${JKE_OUTPUT_ROOT:-$DEFAULT_OUTPUT_ROOT}"
